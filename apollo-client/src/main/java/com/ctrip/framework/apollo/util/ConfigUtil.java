@@ -52,6 +52,7 @@ public class ConfigUtil {
   private long maxConfigCacheSize = 500;//500 cache key
   private long configCacheExpireTime = 1;//1 minute
   private TimeUnit configCacheExpireTimeUnit = TimeUnit.MINUTES;//1 minute
+  // 长轮询延迟时间2秒钟
   private long longPollingInitialDelayInMills = 2000;//2 seconds
   private boolean autoUpdateInjectedSpringProperties = true;
   private final RateLimiter warnLogRateLimiter;
