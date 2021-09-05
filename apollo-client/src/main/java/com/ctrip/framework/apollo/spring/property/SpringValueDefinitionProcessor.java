@@ -38,6 +38,8 @@ import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 
 /**
+ * 对所有的BeanDefinition进行遍历，將属性中包含${…}参数占位符的属性添加到Apollo 属性注册表。Apollo 属性注册表具体结构如下：
+ *
  * To process xml config placeholders, e.g.
  *
  * <pre>
