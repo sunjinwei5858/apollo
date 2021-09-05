@@ -25,20 +25,24 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotationMetadata;
 
 /**
+ * 1:@EnableApolloConfig，启动apollo配置中心，
+ * 具体初始化操作有ApolloConfigRegistrar完成，因为实现了ImportBeanDefinitionRegistrar接口可以注册bean定义
+ * ImportBeanDefinitionRegistrar接口的实现类作用于在Spring解析Bean配置生成BeanDefinition对象阶段，
+ * 在Spring解析Configuration注解时，向Spring容器中【增加额外的BeanDefinition。】
  * @author Jason Song(song_s@ctrip.com)
  */
 public class ApolloConfigRegistrar implements ImportBeanDefinitionRegistrar, EnvironmentAware {
 
-  private final ApolloConfigRegistrarHelper helper = ServiceBootstrap.loadPrimary(ApolloConfigRegistrarHelper.class);
+    private final ApolloConfigRegistrarHelper helper = ServiceBootstrap.loadPrimary(ApolloConfigRegistrarHelper.class);
 
-  @Override
-  public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
-    helper.registerBeanDefinitions(importingClassMetadata, registry);
-  }
+    @Override
+    public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+        helper.registerBeanDefinitions(importingClassMetadata, registry);
+    }
 
-  @Override
-  public void setEnvironment(Environment environment) {
-    this.helper.setEnvironment(environment);
-  }
+    @Override
+    public void setEnvironment(Environment environment) {
+        this.helper.setEnvironment(environment);
+    }
 
 }

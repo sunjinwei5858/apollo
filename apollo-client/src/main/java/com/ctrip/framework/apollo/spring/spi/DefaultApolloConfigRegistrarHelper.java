@@ -32,10 +32,22 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotationMetadata;
 
+/**
+ * ApolloConfigRegistrar中注册了几个BeanDefinition，具体如下：
+ * 这些类要么实现了BeanFactoryPostProcessor接口，要么实现了BeanPostProcessor接口，
+ * 前面有提到过BeanFactoryPostProcessor和BeanPostProcessor是Spring提供的扩展机制，
+ * BeanFactoryPostProcessor一定是在BeanPostProcessor之前执行。
+ *
+ */
 public class DefaultApolloConfigRegistrarHelper implements ApolloConfigRegistrarHelper {
 
   private Environment environment;
 
+  /**
+   * 注册了
+   * @param importingClassMetadata
+   * @param registry
+   */
   @Override
   public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
     AnnotationAttributes attributes = AnnotationAttributes
@@ -49,14 +61,19 @@ public class DefaultApolloConfigRegistrarHelper implements ApolloConfigRegistrar
     // to make sure the default PropertySourcesPlaceholderConfigurer's priority is higher than PropertyPlaceholderConfigurer
     propertySourcesPlaceholderPropertyValues.put("order", 0);
 
+    // 1 PropertySourcesPlaceholderConfigurer---- BeanFactoryPostProcessor
     BeanRegistrationUtil.registerBeanDefinitionIfNotExists(registry, PropertySourcesPlaceholderConfigurer.class.getName(),
         PropertySourcesPlaceholderConfigurer.class, propertySourcesPlaceholderPropertyValues);
+    // 2 PropertySourcesProcessor--BeanFactoryPostProcessor
     BeanRegistrationUtil.registerBeanDefinitionIfNotExists(registry, PropertySourcesProcessor.class.getName(),
         PropertySourcesProcessor.class);
+    // 3 ApolloAnnotationProcessor--BeanPostProcessor
     BeanRegistrationUtil.registerBeanDefinitionIfNotExists(registry, ApolloAnnotationProcessor.class.getName(),
         ApolloAnnotationProcessor.class);
+    // 4 SpringValueProcessor -- BeanFactoryPostProcessor和BeanPostProcessor
     BeanRegistrationUtil.registerBeanDefinitionIfNotExists(registry, SpringValueProcessor.class.getName(),
         SpringValueProcessor.class);
+    // 5 SpringValueDefinitionProcessor
     BeanRegistrationUtil.registerBeanDefinitionIfNotExists(registry, SpringValueDefinitionProcessor.class.getName(),
         SpringValueDefinitionProcessor.class);
   }

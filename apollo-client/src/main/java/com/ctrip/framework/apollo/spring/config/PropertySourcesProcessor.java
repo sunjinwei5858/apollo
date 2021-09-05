@@ -47,6 +47,8 @@ import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 
 /**
+ * 2:PropertySourcesProcessor Spring容器预处理器
+ *
  * Apollo Property Sources processor for Spring Annotation Based Application. <br /> <br />
  *
  * The reason why PropertySourcesProcessor implements {@link BeanFactoryPostProcessor} instead of
@@ -71,7 +73,9 @@ public class PropertySourcesProcessor implements BeanFactoryPostProcessor, Envir
 
   @Override
   public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+    // 1 从配置中心拉去配置到项目环境
     initializePropertySources();
+    // 2 添加配置修改监听器 使的配置中心实现热发布
     initializeAutoUpdatePropertiesFeature(beanFactory);
   }
 
@@ -108,6 +112,7 @@ public class PropertySourcesProcessor implements BeanFactoryPostProcessor, Envir
       environment.getPropertySources()
           .addAfter(PropertySourcesConstants.APOLLO_BOOTSTRAP_PROPERTY_SOURCE_NAME, composite);
     } else {
+      //
       environment.getPropertySources().addFirst(composite);
     }
   }
@@ -138,6 +143,7 @@ public class PropertySourcesProcessor implements BeanFactoryPostProcessor, Envir
 
     List<ConfigPropertySource> configPropertySources = configPropertySourceFactory.getAllConfigPropertySources();
     for (ConfigPropertySource configPropertySource : configPropertySources) {
+      //
       configPropertySource.addChangeListener(autoUpdateConfigChangeListener);
     }
   }
