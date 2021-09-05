@@ -19,6 +19,7 @@ package com.ctrip.framework.apollo;
 import com.ctrip.framework.apollo.model.ConfigChangeEvent;
 
 /**
+ * 3:RepositoryChangeListener、ConfigChangeListener负责处理配置发布事件
  * @author Jason Song(song_s@ctrip.com)
  */
 public interface ConfigChangeListener {

@@ -19,6 +19,12 @@ package com.ctrip.framework.apollo.internals;
 import java.util.Properties;
 
 /**
+ *3:RepositoryChangeListener、ConfigChangeListener负责处理配置发布事件
+ *
+ * 二者主要做的事情是
+ * 1:过滤出修改过的配置
+ * 2:更新修改配置的bean,
+ *
  * @author Jason Song(song_s@ctrip.com)
  */
 public interface RepositoryChangeListener {
