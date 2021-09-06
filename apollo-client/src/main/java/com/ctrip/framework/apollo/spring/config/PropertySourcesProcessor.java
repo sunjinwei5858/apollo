@@ -47,8 +47,11 @@ import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 
 /**
- * 2:PropertySourcesProcessor Spring容器预处理器
- *
+ * 1 根据命名空间从配置中心获取配置信息，创建RemoteConfigRepository和LocalFileConfigRepository对象。
+ * 2 RemoteConfigRepository表示远程配置中心资源，RemoteConfigRepository开启HTTP长轮询请求定时任务，默认2s请求一次。
+ * 3 LocalFileConfigRepository表示本地缓存配置资源，LocalFileConfigRepository对象缓存配置信息到C:\opt\data 或者/opt/data目录。
+ * 4 將本地缓存配置信息转换为PropertySource对象（Apollo自定义了Spring的PropertySource），加载到Spring的Environment对象中。
+ * 5 將自定义的ConfigPropertySource注册为观察者。一旦RemoteConfigRepository发现远程配置中心信息发生变化，ConfigPropertySource对象会得到通知。
  * Apollo Property Sources processor for Spring Annotation Based Application. <br /> <br />
  *
  * The reason why PropertySourcesProcessor implements {@link BeanFactoryPostProcessor} instead of
