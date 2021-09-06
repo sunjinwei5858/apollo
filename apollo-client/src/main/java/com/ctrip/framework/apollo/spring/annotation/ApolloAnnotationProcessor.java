@@ -47,6 +47,9 @@ import org.springframework.core.env.Environment;
 import org.springframework.util.ReflectionUtils;
 
 /**
+ *
+ * 处理ApolloConfigChangeListener和ApolloConfig注解，
+ * ApolloConfigChangeListener注解用于注册一个配置变化监听器。
  * 3:ApolloAnnotationProcessor Spring容器预处理器 该bean实现了几个aware接口
  * <p>
  * Apollo Annotation Processor for Spring Application
