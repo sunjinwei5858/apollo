@@ -89,7 +89,11 @@ public class PropertySourcesProcessor implements BeanFactoryPostProcessor, Envir
     }
     CompositePropertySource composite = new CompositePropertySource(PropertySourcesConstants.APOLLO_PROPERTY_SOURCE_NAME);
 
-    //sort by order asc
+    //sort by order asc 从小到大排列
+    // 需要注意的是，PropertySource之间是有优先级顺序的，
+    // 如果有一个Key在多个property source中都存在，那么在前面的property source优先。
+    // SpringBoot配置文件存在一个特性，
+    // 优先级较高的配置加载顺序比较靠后， 相同名称的配置 优先级较高的会 覆盖掉 优先级较低的内容。
     ImmutableSortedSet<Integer> orders = ImmutableSortedSet.copyOf(NAMESPACE_NAMES.keySet());
     Iterator<Integer> iterator = orders.iterator();
 
