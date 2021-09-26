@@ -46,6 +46,8 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 
 /**
+ * 实现 AbstractConfigService 抽象类，使用缓存，可以大大提高性能，解决单点故障
+ * 基于 Guava Cache 的配置 Service 实现类
  * config service with guava cache
  *
  * @author Jason Song(song_s@ctrip.com)
@@ -77,8 +79,12 @@ public class ConfigServiceWithCache extends AbstractConfigService {
     nullConfigCacheEntry = new ConfigCacheEntry(ConfigConsts.NOTIFICATION_ID_PLACEHOLDER, null);
   }
 
+  /**
+   * 初始化 通过spring调用 初始化缓存对象
+   */
   @PostConstruct
   void initialize() {
+    // 初始化configCache
     configCache = CacheBuilder.newBuilder()
         .expireAfterAccess(DEFAULT_EXPIRED_AFTER_ACCESS_IN_MINUTES, TimeUnit.MINUTES)
         .build(new CacheLoader<String, ConfigCacheEntry>() {
@@ -116,6 +122,7 @@ public class ConfigServiceWithCache extends AbstractConfigService {
             }
           }
         });
+    // 初始化configIdCache
     configIdCache = CacheBuilder.newBuilder()
         .expireAfterAccess(DEFAULT_EXPIRED_AFTER_ACCESS_IN_MINUTES, TimeUnit.MINUTES)
         .build(new CacheLoader<Long, Optional<Release>>() {
@@ -169,6 +176,11 @@ public class ConfigServiceWithCache extends AbstractConfigService {
     Tracer.logEvent(TRACER_EVENT_CACHE_INVALIDATE, key);
   }
 
+  /**
+   * 清空对应缓存
+   * @param message
+   * @param channel
+   */
   @Override
   public void handleMessage(ReleaseMessage message, String channel) {
     logger.info("message received - channel: {}, message: {}", channel, message);
@@ -177,9 +189,11 @@ public class ConfigServiceWithCache extends AbstractConfigService {
     }
 
     try {
+      // 清空对应的缓存
       invalidate(message.getMessage());
 
       //warm up the cache
+      // 预热缓存 读取configCacheEntry对象 重新从db中加载
       configCache.getUnchecked(message.getMessage());
     } catch (Throwable ex) {
       //ignore
