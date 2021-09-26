@@ -24,6 +24,7 @@ import com.ctrip.framework.apollo.core.dto.ApolloNotificationMessages;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
+ * 实现 AbstractConfigService 抽象类，配置 Service 默认实现类，直接查询数据库，而不使用缓存
  * config service with no cache
  *
  * @author Jason Song(song_s@ctrip.com)
