@@ -64,6 +64,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
+ * 服务端暴露了一个将请求挂起60s的接口 /notifications/v2,来供客户端感知服务端配置变化
  * @author Jason Song(song_s@ctrip.com)
  */
 @RestController

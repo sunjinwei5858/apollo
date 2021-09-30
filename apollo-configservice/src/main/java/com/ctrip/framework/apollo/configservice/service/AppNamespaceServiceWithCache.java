@@ -133,6 +133,7 @@ public class AppNamespaceServiceWithCache implements InitializingBean {
   public void afterPropertiesSet() throws Exception {
     populateDataBaseInterval();
     scanNewAppNamespaces(); //block the startup process until load finished
+    // 创建定时任务
     scheduledExecutorService.scheduleAtFixedRate(() -> {
       Transaction transaction = Tracer.newTransaction("Apollo.AppNamespaceServiceWithCache",
           "rebuildCache");
@@ -198,8 +199,10 @@ public class AppNamespaceServiceWithCache implements InitializingBean {
     if (CollectionUtils.isEmpty(ids)) {
       return;
     }
+    // 500个一组
     List<List<Long>> partitionIds = Lists.partition(ids, 500);
     for (List<Long> toRebuild : partitionIds) {
+      // 查询数据库 使用的是jpa框架来查询
       Iterable<AppNamespace> appNamespaces = appNamespaceRepository.findAllById(toRebuild);
 
       if (appNamespaces == null) {
@@ -207,6 +210,7 @@ public class AppNamespaceServiceWithCache implements InitializingBean {
       }
 
       //handle updated
+      // 问题：如何判断更新
       Set<Long> foundIds = handleUpdatedAppNamespaces(appNamespaces);
 
       //handle deleted
@@ -220,6 +224,9 @@ public class AppNamespaceServiceWithCache implements InitializingBean {
     for (AppNamespace appNamespace : appNamespaces) {
       foundIds.add(appNamespace.getId());
       AppNamespace thatInCache = appNamespaceIdCache.get(appNamespace.getId());
+      /**
+       * 比较数据库查询出来的时间和缓存的时间 是不是之后 如果是之后 那么就更新
+       */
       if (thatInCache != null && appNamespace.getDataChangeLastModifiedTime().after(thatInCache
           .getDataChangeLastModifiedTime())) {
         appNamespaceIdCache.put(appNamespace.getId(), appNamespace);
