@@ -60,8 +60,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 
 /**
- * RemoteConfigRepository同步配置信息
- *
+ * 客户端的轮询1
+ * 定时轮询 Config Service 的配置读取 /configs/{appId}/{clusterName}/{namespace:.+} 接口。
+ * 接口的逻辑，在 《Apollo 源码解析 —— Config Service 配置读取接口》 有详细解析。
+ * ps：
+ * 实现 AbstractConfigRepository 抽象类，远程配置 Repository 。实现从 Config Service 拉取配置，并缓存在内存中。并且，定时 + 实时刷新缓存。
  * @author Jason Song(song_s@ctrip.com)
  */
 public class RemoteConfigRepository extends AbstractConfigRepository {
@@ -108,8 +111,11 @@ public class RemoteConfigRepository extends AbstractConfigRepository {
         m_configNeedForceRefresh = new AtomicBoolean(true);
         m_loadConfigFailSchedulePolicy = new ExponentialSchedulePolicy(m_configUtil.getOnErrorRetryInterval(),
                 m_configUtil.getOnErrorRetryInterval() * 8);
+        // 尝试同步配置：该方法是父类公共方法
         this.trySync();
+        // 初始化定时刷新配置的任务
         this.schedulePeriodicRefresh();
+        // 注册自己到 RemoteConfigLongPollService 中，实现配置更新的实时通知
         this.scheduleLongPollingRefresh();
     }
 
@@ -131,9 +137,17 @@ public class RemoteConfigRepository extends AbstractConfigRepository {
         return ConfigSourceType.REMOTE;
     }
 
+    /**
+     * 初始化定时刷新配置的任务：每5min调用
+     */
     private void schedulePeriodicRefresh() {
         logger.debug("Schedule periodic refresh with interval: {} {}",
                 m_configUtil.getRefreshInterval(), m_configUtil.getRefreshIntervalTimeUnit());
+
+        // 定时轮询的时间
+        int refreshInterval = m_configUtil.getRefreshInterval();
+        // 定时轮询的时间单位
+        TimeUnit refreshIntervalTimeUnit = m_configUtil.getRefreshIntervalTimeUnit();
         m_executorService.scheduleAtFixedRate(
                 new Runnable() {
                     @Override
@@ -143,8 +157,7 @@ public class RemoteConfigRepository extends AbstractConfigRepository {
                         trySync();
                         Tracer.logEvent("Apollo.Client.Version", Apollo.VERSION);
                     }
-                }, m_configUtil.getRefreshInterval(), m_configUtil.getRefreshInterval(),
-                m_configUtil.getRefreshIntervalTimeUnit());
+                }, refreshInterval, refreshInterval, refreshIntervalTimeUnit);
     }
 
     @Override
@@ -152,7 +165,9 @@ public class RemoteConfigRepository extends AbstractConfigRepository {
         Transaction transaction = Tracer.newTransaction("Apollo.ConfigService", "syncRemoteConfig");
 
         try {
+            // 从原来的缓存中取出
             ApolloConfig previous = m_configCache.get();
+            // 服务端接口获取 然后进行比较
             ApolloConfig current = loadApolloConfig();
 
             //reference equals means HTTP 304

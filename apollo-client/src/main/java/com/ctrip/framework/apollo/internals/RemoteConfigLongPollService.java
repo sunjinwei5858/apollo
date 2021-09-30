@@ -62,11 +62,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 感知配置发布
- * RemoteConfigLongPollService通过长轮训(结合Spring DeferredResult)迅速感知配置发布，
+ * 客户端的轮询2：长轮询 Config Service 的配置变更通知 /notifications/v2 接口。
+ * 1 当有新的通知时，触发 RemoteConfigRepository ，立即轮询 Config Service 的配置读取 /configs/{appId}/{clusterName}/{namespace:.+} 接口。
+ * 2 接口的逻辑，在 《Apollo 源码解析 —— Config Service 通知配置变化》 有详细解析。
+ *
+ * RemoteConfigLongPollService通过长轮询(结合Spring DeferredResult)迅速感知配置发布，
  * 其通知RemoteConfigRepository到ConfigServer拉取最新配置。
  *
- * 此处引入RemoteConfigLongPollService长轮训个人觉得是为了实现配置推送模式，
+ * 此处引入RemoteConfigLongPollService长轮询个人觉得是为了实现配置推送模式，
  * apollo并不是使用消息来实现配置发布的推送
  *
  * @author Jason Song(song_s@ctrip.com)
@@ -115,9 +118,17 @@ public class RemoteConfigLongPollService {
         m_longPollRateLimiter = RateLimiter.create(m_configUtil.getLongPollQPS());
     }
 
+    /**
+     * 将RemoteConfigRepository注册到remoteConfigLongPollService,
+     * 提交 RemoteConfigRepository 到长轮询任务
+     * @param namespace
+     * @param remoteConfigRepository
+     * @return
+     */
     public boolean submit(String namespace, RemoteConfigRepository remoteConfigRepository) {
         boolean added = m_longPollNamespaces.put(namespace, remoteConfigRepository);
         m_notifications.putIfAbsent(namespace, INIT_NOTIFICATION_ID);
+        // 若未启动长轮询定时任务，进行启动
         if (!m_longPollStarted.get()) {
             // 开始长轮询
             startLongPolling();
@@ -126,16 +137,20 @@ public class RemoteConfigLongPollService {
     }
 
     private void startLongPolling() {
+        // cas设置长轮询任务已经启动，若已经启动，不重复启动
         if (!m_longPollStarted.compareAndSet(false, true)) {
             //already started
             return;
         }
         try {
+            // 获得 appId cluster dataCenter 配置信息
             final String appId = m_configUtil.getAppId();
             final String cluster = m_configUtil.getCluster();
             final String dataCenter = m_configUtil.getDataCenter();
             final String secret = m_configUtil.getAccessKeySecret();
+            // 获得长轮询任务的初始化延迟时间，单位毫秒。
             final long longPollingInitialDelayInMills = m_configUtil.getLongPollingInitialDelayInMills();
+            // 提交长轮询任务。该任务会持续且循环执行
             m_longPollingService.submit(new Runnable() {
                 @Override
                 public void run() {
@@ -204,7 +219,9 @@ public class RemoteConfigLongPollService {
 
                 logger.debug("Long polling response: {}, url: {}", response.getStatusCode(), url);
                 /**
-                 * 这里说明有配置更新，通知RemoteConfigRepository，向configServer发起同步配置请求
+                 * 这里说明有配置更新，通知RemoteConfigRepository，向configServer发起同步配置请求.
+                 * 为什么要这样设计呢？
+                 * 考虑幂等
                  */
                 if (response.getStatusCode() == 200 && response.getBody() != null) {
                     updateNotifications(response.getBody());
@@ -258,7 +275,7 @@ public class RemoteConfigLongPollService {
             for (RemoteConfigRepository remoteConfigRepository : toBeNotified) {
                 try {
                     /**
-                     * 此处引入RemoteConfigLongPollService长轮训个人觉得是为了实现配置推送模式，apollo并不是使用消息来实现配置发布的推送
+                     * remoteConfigRepository出场
                      */
                     remoteConfigRepository.onLongPollNotified(lastServiceDto, remoteMessages);
                 } catch (Throwable ex) {

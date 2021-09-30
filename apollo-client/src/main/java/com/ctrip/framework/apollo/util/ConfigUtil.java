@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 public class ConfigUtil {
 
   private static final Logger logger = LoggerFactory.getLogger(ConfigUtil.class);
+  // 5min
   private int refreshInterval = 5;
   private TimeUnit refreshIntervalTimeUnit = TimeUnit.MINUTES;
   private int connectTimeout = 1000; //1 second
