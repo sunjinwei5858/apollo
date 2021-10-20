@@ -81,6 +81,8 @@ public class ConfigServiceWithCache extends AbstractConfigService {
 
   /**
    * 初始化 通过spring调用 初始化缓存对象
+   * 使用google guava包下面的loadCache 非常好的设计
+   * 使用expireAfterAccess来进行过期 该方法过期 保证只有一个线程会去load缓存 其余线程会阻塞 来避免缓存击穿
    */
   @PostConstruct
   void initialize() {
