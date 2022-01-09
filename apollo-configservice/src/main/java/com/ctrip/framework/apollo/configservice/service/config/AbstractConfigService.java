@@ -20,12 +20,10 @@ import com.ctrip.framework.apollo.biz.entity.Release;
 import com.ctrip.framework.apollo.biz.grayReleaseRule.GrayReleaseRulesHolder;
 import com.ctrip.framework.apollo.core.ConfigConsts;
 import com.ctrip.framework.apollo.core.dto.ApolloNotificationMessages;
-
 import com.google.common.base.Strings;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Objects;
-
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * 实现ConfigService接口，配置service抽象类，实现公共的获取配置的逻辑，并暴露抽象方法，让子类去实现
@@ -41,6 +39,7 @@ public abstract class AbstractConfigService implements ConfigService {
                               String configNamespace, String dataCenter, ApolloNotificationMessages clientMessages) {
         // load from specified cluster first
         if (!Objects.equals(ConfigConsts.CLUSTER_NAME_DEFAULT, configClusterName)) {
+            // findRelease->findActiveOne+findLatestActiveRelease
             Release clusterRelease = findRelease(clientAppId, clientIp, configAppId, configClusterName, configNamespace,
                     clientMessages);
 
@@ -51,6 +50,7 @@ public abstract class AbstractConfigService implements ConfigService {
 
         // try to load via data center
         if (!Strings.isNullOrEmpty(dataCenter) && !Objects.equals(dataCenter, configClusterName)) {
+            // findRelease->findActiveOne+findLatestActiveRelease
             Release dataCenterRelease = findRelease(clientAppId, clientIp, configAppId, dataCenter, configNamespace,
                     clientMessages);
             if (Objects.nonNull(dataCenterRelease)) {
@@ -59,6 +59,7 @@ public abstract class AbstractConfigService implements ConfigService {
         }
 
         // fallback to default release
+        // findRelease->findActiveOne+findLatestActiveRelease
         return findRelease(clientAppId, clientIp, configAppId, ConfigConsts.CLUSTER_NAME_DEFAULT, configNamespace,
                 clientMessages);
     }

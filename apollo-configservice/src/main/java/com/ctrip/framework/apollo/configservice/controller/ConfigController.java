@@ -77,6 +77,21 @@ public class ConfigController {
     this.gson = gson;
   }
 
+  /**
+   * 该接口提供读取配置的功能
+   *
+   * @param appId
+   * @param clusterName
+   * @param namespace
+   * @param dataCenter
+   * @param clientSideReleaseKey
+   * @param clientIp
+   * @param messagesAsString
+   * @param request
+   * @param response
+   * @return
+   * @throws IOException
+   */
   @GetMapping(value = "/{appId}/{clusterName}/{namespace:.+}")
   public ApolloConfig queryConfig(@PathVariable String appId, @PathVariable String clusterName,
                                   @PathVariable String namespace,
@@ -101,6 +116,7 @@ public class ConfigController {
 
     String appClusterNameLoaded = clusterName;
     if (!ConfigConsts.NO_APPID_PLACEHOLDER.equalsIgnoreCase(appId)) {
+      // loadConfig!!!!
       Release currentAppRelease = configService.loadConfig(appId, clientIp, appId, clusterName, namespace,
           dataCenter, clientMessages);
 
@@ -120,6 +136,7 @@ public class ConfigController {
       }
     }
 
+    // 若获取不到release 返回状态码404的响应
     if (releases.isEmpty()) {
       response.sendError(HttpServletResponse.SC_NOT_FOUND,
           String.format(
@@ -130,11 +147,14 @@ public class ConfigController {
       return null;
     }
 
+    // 记录InstanceConfig
     auditReleases(appId, clusterName, dataCenter, clientIp, releases);
 
+    // 计算config service的合并release key
     String mergedReleaseKey = releases.stream().map(Release::getReleaseKey)
             .collect(Collectors.joining(ConfigConsts.CLUSTER_NAMESPACE_SEPARATOR));
 
+    // 对比client的合并 release key，如果相等 说明没有改变 返回状态码304的响应
     if (mergedReleaseKey.equals(clientSideReleaseKey)) {
       // Client side configuration is the same with server side, return 304
       response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
@@ -143,8 +163,10 @@ public class ConfigController {
       return null;
     }
 
+    // 创建apollo config对象
     ApolloConfig apolloConfig = new ApolloConfig(appId, appClusterNameLoaded, originalNamespace,
         mergedReleaseKey);
+    // 合并releases的配置 并将结果设置到apollo config中
     apolloConfig.setConfigurations(mergeReleaseConfigurations(releases));
 
     Tracer.logEvent("Apollo.Config.Found", assembleKey(appId, appClusterNameLoaded,
