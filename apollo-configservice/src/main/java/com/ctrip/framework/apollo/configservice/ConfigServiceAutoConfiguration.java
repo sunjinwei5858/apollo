@@ -51,7 +51,7 @@ public class ConfigServiceAutoConfiguration {
   }
 
   /**
-   *
+   * config-service.cache.enabled 配置：默认为false
    * @return
    */
   @Bean

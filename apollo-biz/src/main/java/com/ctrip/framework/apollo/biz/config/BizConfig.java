@@ -42,6 +42,8 @@ public class BizConfig extends RefreshableConfig {
   private static final int DEFAULT_ACCESSKEY_CACHE_SCAN_INTERVAL = 1; //1s
   private static final int DEFAULT_ACCESSKEY_CACHE_REBUILD_INTERVAL = 60; //60s
   private static final int DEFAULT_RELEASE_MESSAGE_CACHE_SCAN_INTERVAL = 1; //1s
+
+  // 默认 线程池 1s 中去扫描数据库
   private static final int DEFAULT_RELEASE_MESSAGE_SCAN_INTERVAL_IN_MS = 1000; //1000ms
   private static final int DEFAULT_RELEASE_MESSAGE_NOTIFICATION_BATCH = 100;
   private static final int DEFAULT_RELEASE_MESSAGE_NOTIFICATION_BATCH_INTERVAL_IN_MILLI = 100;//100ms
