@@ -50,11 +50,17 @@ public class ConfigServiceAutoConfiguration {
     return new GrayReleaseRulesHolder();
   }
 
+  /**
+   *
+   * @return
+   */
   @Bean
   public ConfigService configService() {
+    // 开启缓存 使用ConfigServiceWithCache
     if (bizConfig.isConfigServiceCacheEnabled()) {
       return new ConfigServiceWithCache();
     }
+    // 不开启缓存 使用DefaultConfigService
     return new DefaultConfigService();
   }
 
