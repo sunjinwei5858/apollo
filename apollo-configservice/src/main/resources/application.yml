@@ -21,15 +21,23 @@ spring:
   cloud:
     consul:
       enabled: false
+  datasource:
+    url: jdbc:mysql://localhost:3306/ApolloConfigDB
+    username: root
+    password: sjw123456
 ctrip:
   appid: 100003171
+
+config-service:
+  cache:
+    enabled: true
 
 server:
   port: 8080
 
 logging:
   file:
-    name: /opt/logs/100003171/apollo-configservice.log
+    name: /Users/sunjinwei/logs/apollo-configservice.log
 
 eureka:
   instance:
